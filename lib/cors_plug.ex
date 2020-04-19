@@ -1,5 +1,6 @@
 defmodule CORSPlug do
   import Plug.Conn
+  require Logger
 
   def defaults do
     [
@@ -28,6 +29,7 @@ defmodule CORSPlug do
 
   @doc false
   def call(conn, options) do
+    Logger.info("----> Calling with conn = #{inspect(conn)} and options = #{inspect(options)}")
     conn = merge_resp_headers(conn, headers(conn, options))
 
     case {options[:send_preflight_response?], conn.method} do
@@ -38,6 +40,7 @@ defmodule CORSPlug do
 
   @doc false
   def init(options) do
+    Logger.info("----> Init with options = #{inspect(options)}")
     options
     |> prepare_cfg(Application.get_all_env(:cors_plug))
     |> Keyword.update!(:expose, &Enum.join(&1, ","))
@@ -62,7 +65,9 @@ defmodule CORSPlug do
 
   # universal headers
   defp headers(conn, options) do
+    Logger.info("----> Taking care of universal headers")
     allowed_origin = origin(options[:origin], conn)
+    Logger.info("----> Allowed origin config = #{inspect(allowed_origin)}")
     vary_header = vary_header(allowed_origin, get_resp_header(conn, "vary"))
 
     vary_header ++ cors_headers(allowed_origin, options)
@@ -70,10 +75,12 @@ defmodule CORSPlug do
 
   # When the origin doesnt match, dont send CORS headers
   defp cors_headers(nil, _options) do
+    Logger.info("----> Origin doesn't match")
     []
   end
 
   defp cors_headers(allowed_origin, options) do
+    Logger.info("----> Origin matches")
     [
       {"access-control-allow-origin", allowed_origin},
       {"access-control-expose-headers", options[:expose]},
