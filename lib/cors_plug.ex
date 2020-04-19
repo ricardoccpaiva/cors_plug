@@ -31,11 +31,16 @@ defmodule CORSPlug do
   def call(conn, options) do
     Logger.info("----> Calling with conn = #{inspect(conn)} and options = #{inspect(options)}")
     conn = merge_resp_headers(conn, headers(conn, options))
+    Logger.info("----> Merged headers = #{inspect(conn)}")
 
-    case {options[:send_preflight_response?], conn.method} do
+    resp = case {options[:send_preflight_response?], conn.method} do
       {true, "OPTIONS"} -> conn |> send_resp(204, "") |> halt()
       {_, _method} -> conn
     end
+
+    Logger.info("----> Sending resp = #{inspect(resp)}")
+
+    resp
   end
 
   @doc false
